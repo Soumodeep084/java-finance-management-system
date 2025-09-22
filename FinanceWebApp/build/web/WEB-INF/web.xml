@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="6.0" xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
+
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <filter>
+        <filter-name>AuthGuard</filter-name>
+        <filter-class>filter.AuthGuard</filter-class>
+    </filter>
+
+    <!-- Protect servlets and JSPs -->
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/dashboard</url-pattern>       <!-- servlet -->
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/dashboard.jsp</url-pattern>   <!-- JSP page -->
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/accounts</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/accounts.jsp</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/income</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/income.jsp</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/expense</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/expense.jsp</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/budgets</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/budgets.jsp</url-pattern>
+    </filter-mapping>
+    
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/liabilities</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/liabilities.jsp</url-pattern>
+    </filter-mapping>
+    
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/charts</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/charts.jsp</url-pattern>
+    </filter-mapping>
+    
+    <!--    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/ChangeUsernameServlet</url-pattern>
+    </filter-mapping>-->
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/change-username.jsp</url-pattern>
+    </filter-mapping>
+    <!--    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/ChangePasswordServlet</url-pattern>
+    </filter-mapping>-->
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/change-password.jsp</url-pattern>
+    </filter-mapping>
+    
+    <!-- Protect Delete Account routes -->
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/DeleteAccountServlet</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/delete-account.jsp</url-pattern>
+    </filter-mapping>
+
+
+    <filter-mapping>
+        <filter-name>AuthGuard</filter-name>
+        <url-pattern>/target</url-pattern>
+    </filter-mapping>
+    
+    <context-param>
+        <param-name>MAILTRAP_USER</param-name>
+        <param-value>d1ad7162d90147</param-value>
+    </context-param>
+    <context-param>
+        <param-name>MAILTRAP_PASS</param-name>
+        <param-value>bc53db5acbc399</param-value>
+    </context-param>
+</web-app>

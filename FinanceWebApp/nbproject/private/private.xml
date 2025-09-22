@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/AccountServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/change-password.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/ExpenseServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/dashboard.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/income.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/BudgetServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/signup.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/forgot-password.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/Auth/DeleteAccountServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/DashboardServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/IncomeServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/Auth/SignUpServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/service/MailService.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/budgets.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/components/footer.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/index.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/Auth/LogoutServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/components/navbar.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/charts.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/liabilities.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/login.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/Auth/LoginServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/change-username.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/accounts.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/Auth/ForgotPasswordServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/delete-account.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/ChangePasswordServlet.java</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/web/expense.jsp</file>
+            <file>file:/C:/Users/S%20DUTTA/OneDrive/Documents/NetBeansProjects/FinanceWebApp/src/java/controller/LiabilitiesServlet.java</file>
+        </group>
+    </open-files>
+</project-private>
