@@ -2,18 +2,24 @@ package controller.Reports;
 
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
-import com.itextpdf.text.pdf.draw.LineSeparator;
 import dao.DatabaseManager;
-import java.util.List;
-import java.util.ArrayList;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import model.UserSession;
+import org.jfree.chart.*;
+import java.util.List;
+import java.util.ArrayList;
+import org.jfree.chart.plot.*;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
 
 @WebServlet("/downloadReport")
@@ -34,17 +40,27 @@ public class DownloadReportServlet extends HttpServlet {
         }
 
         int userId = userSession.getUserId();
-        String name = userSession.getName();
-        String email = ""; // make sure you set email in session
+        String name = userSession.getName();   // ✅ Name
+        String email = "";
 
         List<Map<String, Object>> incomes = new ArrayList<>();
         List<Map<String, Object>> expenses = new ArrayList<>();
 
-        // Fetch transactions
+        Map<YearMonth, Double> incomeByMonth = new LinkedHashMap<>();
+        Map<YearMonth, Double> expenseByMonth = new LinkedHashMap<>();
+        Map<String, Double> incomeByCategory = new LinkedHashMap<>();
+        Map<String, Double> expenseByCategory = new LinkedHashMap<>();
+
+        YearMonth now = YearMonth.now();
+        for (int i = 5; i >= 0; i--) {
+            incomeByMonth.put(now.minusMonths(i), 0.0);
+            expenseByMonth.put(now.minusMonths(i), 0.0);
+        }
+
         try (Connection conn = DatabaseManager.getConnection()) {
 
             // user email
-            try (PreparedStatement ps = conn.prepareStatement( "SELECT email FROM users WHERE user_id = ? ")) {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT email FROM users WHERE user_id = ? ")) {
                 ps.setInt(1, userId);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -52,33 +68,54 @@ public class DownloadReportServlet extends HttpServlet {
                     }
                 }
             }
-            
-            // income records
+
+            // Income
             try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT income_date, income_source, amount FROM income WHERE user_id = ? ORDER BY income_date DESC")) {
+                    "SELECT income_date, income_source, amount FROM income WHERE user_id=? ORDER BY income_date DESC")) {
                 ps.setInt(1, userId);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("income_date", rs.getDate("income_date"));
-                        map.put("income_source", rs.getString("income_source"));
-                        map.put("amount", rs.getBigDecimal("amount"));
-                        incomes.add(map);
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("date", rs.getDate("income_date"));
+                        row.put("source", rs.getString("income_source"));
+                        row.put("amount", rs.getBigDecimal("amount"));
+                        incomes.add(row);
                     }
                 }
             }
 
-            // expense records
+            // Expense
             try (PreparedStatement ps = conn.prepareStatement(
-                    "SELECT expense_date, expense_category, amount FROM expense WHERE user_id = ? ORDER BY expense_date DESC")) {
+                    "SELECT expense_date, expense_category, amount FROM expense WHERE user_id=? ORDER BY expense_date DESC")) {
                 ps.setInt(1, userId);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("expense_date", rs.getDate("expense_date"));
-                        map.put("expense_category", rs.getString("expense_category"));
-                        map.put("amount", rs.getBigDecimal("amount"));
-                        expenses.add(map);
+                        Map<String, Object> row = new HashMap<>();
+                        row.put("date", rs.getDate("expense_date"));
+                        row.put("category", rs.getString("expense_category"));
+                        row.put("amount", rs.getBigDecimal("amount"));
+                        expenses.add(row);
+                    }
+                }
+            }
+
+            // Category summaries
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT COALESCE(income_source, 'Uncategorized'), SUM(amount) FROM income WHERE user_id=? GROUP BY income_source")) {
+                ps.setInt(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        incomeByCategory.put(rs.getString(1), rs.getDouble(2));
+                    }
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT COALESCE(expense_category, 'Uncategorized'), SUM(amount) FROM expense WHERE user_id=? GROUP BY expense_category")) {
+                ps.setInt(1, userId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        expenseByCategory.put(rs.getString(1), rs.getDouble(2));
                     }
                 }
             }
@@ -87,7 +124,6 @@ public class DownloadReportServlet extends HttpServlet {
             throw new ServletException("Database error: " + e.getMessage(), e);
         }
 
-        // Set PDF response headers
         resp.setContentType("application/pdf");
         resp.setHeader("Content-Disposition", "attachment; filename=Wealthory_Report.pdf");
 
@@ -96,98 +132,114 @@ public class DownloadReportServlet extends HttpServlet {
             PdfWriter.getInstance(doc, resp.getOutputStream());
             doc.open();
 
-            // Fonts
-            Font titleFont = new Font(Font.FontFamily.HELVETICA, 20, Font.BOLD, new BaseColor(34, 197, 94)); // emerald
-            Font subTitleFont = new Font(Font.FontFamily.HELVETICA, 13, Font.BOLD, new BaseColor(64, 64, 64));
-            Font normalFont = new Font(Font.FontFamily.HELVETICA, 11, Font.NORMAL, BaseColor.BLACK);
-            Font grayFont = new Font(Font.FontFamily.HELVETICA, 10, Font.ITALIC, new BaseColor(120, 120, 120));
+            // ===== Fonts (iText Fonts, not AWT) =====
+            Font titleFont = new Font(Font.FontFamily.HELVETICA, 20, Font.BOLD, new BaseColor(34, 197, 94));
+            Font subFont = new Font(Font.FontFamily.HELVETICA, 13, Font.BOLD);
+            Font normalFont = new Font(Font.FontFamily.HELVETICA, 11, Font.NORMAL);
+            Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, BaseColor.WHITE);
 
-            // Logo (optional - place logo.png in WebContent/images)
-            try {
-                String logoPath = getServletContext().getRealPath("/images/sm-logo.png");
-                Image logo = Image.getInstance(logoPath);
-                logo.scaleToFit(60, 60);
-                logo.setAlignment(Element.ALIGN_CENTER);
-                doc.add(logo);
-            } catch (DocumentException | IOException ignored) {
-                // skip if logo not found
-            }
-
-            // Title
+            // ===== Header =====
             Paragraph title = new Paragraph("Wealthory - Transactions Report\n\n", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             doc.add(title);
 
-            // User Info
-            doc.add(new Paragraph("Generated on: " + LocalDate.now(), grayFont));
-            doc.add(new Paragraph("Name: " + name, normalFont));
+            doc.add(new Paragraph("Generated on: " + LocalDate.now(), normalFont));
+            doc.add(new Paragraph("Name: " + (name != null ? name : "N/A"), normalFont));
             doc.add(new Paragraph("Email: " + (email != null ? email : "N/A") + "\n\n", normalFont));
 
-            // Divider
-            LineSeparator line = new LineSeparator();
-            line.setLineColor(new BaseColor(200, 200, 200));
-            doc.add(line);
-
-            // Income Section
-            doc.add(new Paragraph("\nIncome Records", subTitleFont));
+            // ===== Income Table =====
+            doc.add(new Paragraph("Income Records", subFont));
             doc.add(new Paragraph(" "));
 
             if (incomes.isEmpty()) {
-                doc.add(new Paragraph("⚠️ No income records found.\n\n", grayFont));
+                doc.add(new Paragraph("No income records found.\n\n"));
             } else {
-                PdfPTable incomeTable = new PdfPTable(3);
-                incomeTable.setWidthPercentage(100);
-                incomeTable.setSpacingBefore(5);
-                incomeTable.addCell("Date");
-                incomeTable.addCell("Source");
-                incomeTable.addCell("Amount");
-
-                for (Map<String, Object> inc : incomes) {
-                    incomeTable.addCell(String.valueOf(inc.get("income_date")));
-                    incomeTable.addCell(String.valueOf(inc.get("income_source")));
-                    incomeTable.addCell("₹" + inc.get("amount"));
+                PdfPTable table = styledTable(new String[]{"Date", "Source", "Amount (₹)"});
+                for (Map<String, Object> row : incomes) {
+                    table.addCell(styledCell(String.valueOf(row.get("date")), Element.ALIGN_LEFT));
+                    table.addCell(styledCell(String.valueOf(row.get("source")), Element.ALIGN_LEFT));
+                    table.addCell(styledCell(String.valueOf(row.get("amount")), Element.ALIGN_RIGHT));
                 }
-                doc.add(incomeTable);
+                doc.add(table);
+                doc.add(new Paragraph("\n"));
             }
 
-            // Expense Section
-            doc.add(new Paragraph("\nExpense Records", subTitleFont));
+            // ===== Expense Table =====
+            doc.add(new Paragraph("Expense Records", subFont));
             doc.add(new Paragraph(" "));
 
             if (expenses.isEmpty()) {
-                doc.add(new Paragraph("⚠️ No expense records found.\n\n", grayFont));
+                doc.add(new Paragraph("No expense records found.\n\n"));
             } else {
-                PdfPTable expenseTable = new PdfPTable(3);
-                expenseTable.setWidthPercentage(100);
-                expenseTable.setSpacingBefore(5);
-                expenseTable.addCell("Date");
-                expenseTable.addCell("Category");
-                expenseTable.addCell("Amount");
-
-                for (Map<String, Object> exp : expenses) {
-                    expenseTable.addCell(String.valueOf(exp.get("expense_date")));
-                    expenseTable.addCell(String.valueOf(exp.get("expense_category")));
-                    expenseTable.addCell("₹" + exp.get("amount"));
+                PdfPTable table = styledTable(new String[]{"Date", "Category", "Amount (₹)"});
+                for (Map<String, Object> row : expenses) {
+                    table.addCell(styledCell(String.valueOf(row.get("date")), Element.ALIGN_LEFT));
+                    table.addCell(styledCell(String.valueOf(row.get("category")), Element.ALIGN_LEFT));
+                    table.addCell(styledCell(String.valueOf(row.get("amount")), Element.ALIGN_RIGHT));
                 }
-                doc.add(expenseTable);
+                doc.add(table);
+                doc.add(new Paragraph("\n"));
             }
 
-            // Divider
-            doc.add(new Paragraph("\n"));
-            doc.add(line);
+            // ===== Charts =====
+            doc.add(new Paragraph("📊 Summary Charts", subFont));
+            doc.add(new Paragraph(" "));
 
-            // Summary Section
-            doc.add(new Paragraph("\n📊 Summary & Graphs", subTitleFont));
-            doc.add(new Paragraph("(Graphs will appear here once integrated.)", grayFont));
-
-            if (incomes.isEmpty() && expenses.isEmpty()) {
-                doc.add(new Paragraph("\nNo transactions found for this account.", grayFont));
+            // Line Chart (Income vs Expense)
+            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+            for (YearMonth ym : incomeByMonth.keySet()) {
+                String label = ym.getMonth().toString().substring(0, 3) + " " + ym.getYear();
+                dataset.addValue(incomeByMonth.get(ym), "Income", label);
+                dataset.addValue(expenseByMonth.get(ym), "Expense", label);
             }
+
+            JFreeChart chart = ChartFactory.createLineChart(
+                    "Income vs Expense (Last 6 Months)", "Month", "Amount (₹)", dataset,
+                    PlotOrientation.VERTICAL, true, false, false);
+
+            CategoryPlot plot = chart.getCategoryPlot();
+            plot.setBackgroundPaint(Color.white);
+            plot.setDomainGridlinePaint(Color.lightGray);
+            plot.setRangeGridlinePaint(Color.lightGray);
+            LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
+            renderer.setSeriesPaint(0, new Color(34, 197, 94));
+            renderer.setSeriesPaint(1, new Color(239, 68, 68));
+
+            BufferedImage chartImage = chart.createBufferedImage(480, 300);
+            Image img = Image.getInstance(chartImage, null);
+            img.scaleToFit(500, 300);
+            doc.add(img);
 
             doc.close();
 
         } catch (DocumentException e) {
-            throw new IOException("Error generating PDF: " + e.getMessage(), e);
+            throw new IOException(e);
         }
+    }
+
+    private PdfPTable styledTable(String[] headers) throws DocumentException {
+        PdfPTable table = new PdfPTable(headers.length);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(5);
+        table.setSpacingAfter(10);
+        BaseColor headerColor = new BaseColor(34, 197, 94);
+        Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, BaseColor.WHITE);
+        for (String h : headers) {
+            PdfPCell cell = new PdfPCell(new Phrase(h, headerFont));
+            cell.setBackgroundColor(headerColor);
+            cell.setPadding(6);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(cell);
+        }
+        return table;
+    }
+
+    private PdfPCell styledCell(String text, int align) {
+        Font f = new Font(Font.FontFamily.HELVETICA, 11, Font.NORMAL, BaseColor.BLACK);
+        PdfPCell cell = new PdfPCell(new Phrase(text != null ? text : "", f));
+        cell.setHorizontalAlignment(align);
+        cell.setPadding(5);
+        cell.setBorderColor(new BaseColor(220, 220, 220));
+        return cell;
     }
 }
